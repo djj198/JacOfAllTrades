@@ -1,0 +1,10 @@
+{
+  "id": "jac-trading-agent-mvp",
+  "name": "Jac Trading Agent MVP",
+  "transport": "stdio",
+  "command": "python",
+  "args": ["main.py"],
+  "env": {
+    "PYTHONPATH": "."
+  }
+}
