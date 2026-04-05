@@ -96,3 +96,69 @@ To ensure comprehensive observability and reliable testing, a new logging mechan
 This logging architecture ensures that as we scale to more complex scenarios, we have a clear and isolated view of each component's behavior.
 
 This observability layer ensures that as we scale to full MCP calls and large price histories in future phases, we can quickly identify and address performance regressions.
+
+== Phase 2: Schema-Heavy Hybrid (Strategy B)
+
+Phase 2 implements a hybrid approach that combines structured primitives with dynamic, LLM-driven schema validation. This allows the agent to handle a wide variety of financial insights without requiring a fixed schema for every possible data type.
+
+=== Key Components
+* **`DataRef` Primitive**: An immutable reference to external data (e.g., a CSV file) that includes a path, a registered reader name, and optional parameters.
+* **`VisualizationSinkFactory`**: A pure synchronous service that:
+** Calls a `QuantLLMProtocol` to generate a JSON Schema and corresponding data.
+** Dynamically creates Pydantic v2 models from the schema.
+** Validates the LLM-generated data against these models.
+** Maps the validated data to the core `VisualizationSink` structure.
+* **`SafeLambdaReaderRegistry`**: A registry of pre-approved, safe data readers. This prevents uncontrolled code execution while allowing extensible data loading.
+* **Jac Migration Path**: Throughout the Python implementation, `TODO (Jac)` blocks mark sections of logic that will be migrated to native Jac walkers and `by llm()` calls in Phase 3.
+
+=== Data Flow
+1. **Prompt**: User provides a prompt (e.g., "Analyze portfolio risk").
+2. **Factory Call**: `visualization_service` calls `VisualizationSinkFactory.create`.
+3. **Schema Generation**: LLM (via protocol) generates a JSON Schema for the expected insight.
+4. **Model Creation**: Factory uses `pydantic.create_model` to build a validator.
+5. **Data Generation**: LLM generates data matching the schema.
+6. **Validation**: Pydantic validates the data.
+7. **Reader Attachment**: If `DataRef` is detected in the data, the factory looks up the corresponding reader in the `SafeLambdaReaderRegistry` and attaches it (or its lazy result).
+8. **Sink Construction**: A fully immutable `VisualizationSink` is returned.
+
+=== Architecture Diagram
+
+[plantuml, target="phase2-architecture", format="png"]
+----
+@startuml
+skinparam handwritten false
+skinparam packageStyle rect
+skinparam defaultTextAlignment center
+
+node "Prompt" as prompt
+node "VisualizationService" as service
+node "VisualizationSinkFactory" as factory
+node "QuantLLMProtocol" as protocol
+node "Validated Model" as model
+node "Raw Data" as data
+node "Graph Construction" as graph
+node "SafeLambdaReaderRegistry" as registry
+node "VisualizationSink" as sink
+node "Synthetic Fallback" as fallback
+
+prompt -> service
+service -> factory : Try Factory? (Yes)
+factory -> protocol : Generate Schema
+protocol -> factory : JSON Schema
+factory -> model : Create Pydantic Model
+protocol -> data : Generate Data
+data -> model : Validate
+model -> graph : Validated Data
+graph -> registry : Attach Readers
+registry -> graph
+graph -> sink
+service -> fallback : Try Factory? (No/Fallback)
+fallback -> sink
+@enduml
+----
+
+=== Jac TODO Migration Plan
+* **Registry Lookup**: Replace `SafeLambdaReaderRegistry` with Jac node/edge properties or walker logic.
+* **LLM Calls**: Replace Python protocol methods with `by llm()` calls inside Jac walkers.
+* **Graph Building**: Replace Python dictionary mapping with native Jac node/edge creation.
+* **Schema Management**: Use Jac's native type system and LLM integration for dynamic schema handling.
