@@ -1,0 +1,263 @@
+= JOAT ACP Agent - Project Architecture
+:version: 1.0
+:date: 2026-04-05
+
+== Overview
+The JOAT ACP Agent follows a strictly decoupled, 3-tier architecture designed for performance, type safety, and graph-native reasoning.
+
+== Phase 1: Decoupled Foundation
+Phase 1 implements the core infrastructure required to bridge the Agent Client Protocol (ACP) with synchronous financial analysis services.
+
+=== Key Architectural Principles
+* **Immutable Primitives**: All core data structures in `src/core/primitives/` are `@dataclass(frozen=True)`. This ensures thread safety and predictable state management.
+* **Pure Synchronous Core**: Financial insight generation and visualization creation are implemented as pure functions in `src/core/services/`. They have no side effects and do not perform I/O.
+* **Thin Transport Layer**: `src/transport/` handles only the protocol plumbing. It is decoupled from core logic via a thin async bridge.
+* **Async Delegation**: Using `asyncio.to_thread()`, the agent can execute synchronous, CPU-bound core analysis without blocking the main event loop.
+
+=== Component Diagram
+
+[plantuml, target="phase1-architecture", format="png"]
+----
+@startuml
+package "Transport (Async)" {
+  [AcpTransport] --> [AcpBridge]
+  [AcpTransport] --> [SessionManager]
+}
+
+package "Interfaces" {
+  [PromptHandler (Protocol)]
+  [PromptInput / Output (Dataclasses)]
+}
+
+package "Core (Pure Sync)" {
+  [VisualizationService] --> [Primitives]
+  [JacPromptHandler] --> [VisualizationService]
+}
+
+[AcpBridge] ..> [PromptHandler] : calls via to_thread
+[JacPromptHandler] -up-|> [PromptHandler]
+@enduml
+----
+
+=== Benefits
+* **Testability**: Pure core services can be unit-tested without mocking I/O or transport.
+* **Optimization**: Cython/Nuitka-friendly code in core enables high-performance execution.
+* **Maintainability**: Clear separation between transport and domain logic allows independent evolution.
+
+== Phase 1 Transport Choke Points & Observability
+
+As the agent handles complex financial insights and large datasets, several potential choke points have been identified and instrumented with logging for observability.
+
+=== Identified Choke Points
+* **JSON Serialization/Deserialization**: `VisualizationSink` payloads can become large when including nodes with heavy data arrays (e.g., price history CSVs). Serialization happens at the transport/bridge boundary.
+* **Async-to-Sync Boundary**: The use of `asyncio.to_thread()` in `AcpBridge` introduces a small overhead when delegating to the pure synchronous core.
+* **I/O Streaming**: Stdio handling of large JSON-RPC messages can be a bottleneck for extremely large payloads.
+
+=== Observability Implementation
+To monitor these points, lightweight structured logging has been added:
+* **Latency Tracking**: Entry/exit timestamps and total duration (ms) are logged for both `AcpBridge` and `AcpTransport`.
+* **Payload Size Monitoring**: The size of `VisualizationSink` payloads is logged in bytes to track the impact of large insights.
+* **Boundary Crossing**: Log messages explicitly indicate when the agent crosses the async-to-sync boundary.
+
+== Phase 1 Stability Fixes & Open-Loop Testing
+As part of Phase 1 hardening, several stability improvements were implemented to ensure the agent is resilient to real-world ACP protocol interactions and large-scale testing.
+
+=== Stability Improvements
+* **Defensive Parameter Handling**: The transport layer now supports both `camelCase` (e.g., `sessionId`, `mcpServers`) and `snake_case` (e.g., `session_id`) field names, ensuring compatibility with the ACP SDK's expectations.
+* **Optional Field Tolerance**: Optional fields like `mcpServers` in `session/new` requests are handled gracefully, accepting empty lists or missing keys without raising `Invalid params` errors.
+* **Type-Safe Primitives**: `PromptInput` and related primitives were updated to handle more flexible types for optional configuration fields, preventing runtime type errors.
+
+=== Open-Loop Stress Testing
+A rigorous, open-loop stress test (`tests/test_agent_stability.py`) was introduced to verify the agent's long-term stability:
+* **Iterative Verification**: The test runs 8 full cycles of initialization, session management, and multiple complex prompts.
+* **Error Detection**: The test automatically monitors the agent's logs for any signs of "Invalid params", "Internal error", or "Background task failed" messages.
+* **Performance Benchmarks**: It enforces a strict latency requirement (sub-50ms for stub processing) to ensure the transport layer remains overhead-light.
+* **Subprocess Hygiene**: Tests were refactored to manage subprocess resources (stdin/stdout/stderr pipes) more cleanly, preventing `ResourceWarning` and ensuring clean process teardown even on failure.
+* **Configurable Verbosity**: Use the `DEBUG_TRANSPORT=true` environment variable to enable detailed instrumentation logs.
+* **Log Location**: All agent logs are directed to `/home/theodoric/DataspellProjects/JacOfAllTrades/logs/agent.log` for consistent tracking across development environments.
+
+=== Integration Testing
+To verify the end-to-end flow over stdio, a dedicated integration test `tests/test_integration_stdio.py` is used. It:
+* Starts the agent as a subprocess using `sys.executable main.py`.
+* Simulates a full ACP handshake (initialize, session/new, session/prompt).
+* Verifies the presence of `VisualizationSink` in the final response meta.
+* Prints the resulting sink as a `pprint` dict for visual inspection.
+
+== Phase 1 Logging & Test Isolation
+
+To ensure comprehensive observability and reliable testing, a new logging mechanism has been implemented.
+
+=== Logging Implementation
+* **Configurable Log Path**: The agent now respects the `AGENT_LOG_PATH` environment variable, allowing for custom log file locations.
+* **Test Isolation**: Every test (unit and integration) now has its own dedicated log file named `agent-(test_id).log`. This prevents log pollution and makes debugging individual test failures much easier.
+* **Logging Utility**: A new `tests/utils.py` provides a standardized `setup_test_logging` function used by all test classes to initialize logging based on the current test ID.
+* **Unified Logs**: For integration tests, the agent subprocess and the test client both log to the same dedicated file, providing a unified timeline of events for a specific test run.
+
+This logging architecture ensures that as we scale to more complex scenarios, we have a clear and isolated view of each component's behavior.
+
+This observability layer ensures that as we scale to full MCP calls and large price histories in future phases, we can quickly identify and address performance regressions.
+
+== Phase 2: Schema-Heavy Hybrid (Strategy B)
+
+Phase 2 implements a hybrid approach that combines structured primitives with dynamic, LLM-driven schema validation. This allows the agent to handle a wide variety of financial insights without requiring a fixed schema for every possible data type.
+
+=== Key Components
+* **`DataRef` Primitive**: An immutable reference to external data (e.g., a CSV file) that includes a path, a registered reader name, and optional parameters.
+* **`VisualizationSinkFactory`**: A pure synchronous service that:
+** Calls a `QuantLLMProtocol` to generate a JSON Schema and corresponding data.
+** Dynamically creates Pydantic v2 models from the schema.
+** Validates the LLM-generated data against these models.
+** Maps the validated data to the core `VisualizationSink` structure.
+* **`SafeLambdaReaderRegistry`**: A registry of pre-approved, safe data readers. This prevents uncontrolled code execution while allowing extensible data loading.
+* **Jac Migration Path**: Throughout the Python implementation, `TODO (Jac)` blocks mark sections of logic that will be migrated to native Jac walkers and `by llm()` calls in Phase 3.
+
+=== Data Flow
+1. **Prompt**: User provides a prompt (e.g., "Analyze portfolio risk").
+2. **Factory Call**: `visualization_service` calls `VisualizationSinkFactory.create`.
+3. **Schema Generation**: LLM (via protocol) generates a JSON Schema for the expected insight.
+4. **Model Creation**: Factory uses `pydantic.create_model` to build a validator.
+5. **Data Generation**: LLM generates data matching the schema.
+6. **Validation**: Pydantic validates the data.
+7. **Reader Attachment**: If `DataRef` is detected in the data, the factory looks up the corresponding reader in the `SafeLambdaReaderRegistry` and attaches it (or its lazy result).
+8. **Sink Construction**: A fully immutable `VisualizationSink` is returned.
+
+=== Architecture Diagram
+
+[plantuml, target="phase2-architecture", format="png"]
+----
+@startuml
+skinparam handwritten false
+skinparam packageStyle rect
+skinparam defaultTextAlignment center
+
+node "Prompt" as prompt
+node "VisualizationService" as service
+node "VisualizationSinkFactory" as factory
+node "QuantLLMProtocol" as protocol
+node "Validated Model" as model
+node "Raw Data" as data
+node "Graph Construction" as graph
+node "SafeLambdaReaderRegistry" as registry
+node "VisualizationSink" as sink
+node "Synthetic Fallback" as fallback
+
+prompt -> service
+service -> factory : Try Factory? (Yes)
+factory -> protocol : Generate Schema
+protocol -> factory : JSON Schema
+factory -> model : Create Pydantic Model
+protocol -> data : Generate Data
+data -> model : Validate
+model -> graph : Validated Data
+graph -> registry : Attach Readers
+registry -> graph
+graph -> sink
+service -> fallback : Try Factory? (No/Fallback)
+fallback -> sink
+@enduml
+----
+
+== Phase 3: Slim New Layered InsightEngine + Exact Vibe Pipeline
+
+Phase 3 introduces a more granular, three-component pipeline for processing prompts, providing a clear path for future Jac walker integration. This "Vibe Pipeline" ensures that portfolio context, financial insights, and visualization sinks are handled as discrete, pure-functional steps.
+
+=== The Vibe Pipeline
+1. **Portfolio Context**: Retrieves a thin, immutable snapshot of the user's current portfolio (e.g., holdings, weights, fundamentals).
+2. **Insight Engine**: Generates a `FinancialInsight` primitive, which contains a graph of `InsightNode` and `InsightEdge` objects, along with a `QuantSummary`.
+3. **Visualization Sink Creation**: Derives a `VisualizationSink` from the `FinancialInsight`, enriching it with visualizer-specific metadata (e.g., pseudo-prompts, suggested chart types).
+
+=== Component Diagram
+
+[plantuml, target="phase3-vibe-pipeline", format="png"]
+----
+@startuml
+skinparam handwritten false
+skinparam packageStyle rect
+skinparam defaultTextAlignment center
+
+node "PromptInput" as input
+package "Vibe Pipeline" {
+  node "PortfolioContext" as context
+  node "FinancialInsightService" as insight_service
+  node "VisualizationService" as vis_service
+}
+node "PromptOutput" as output
+
+input -> context : 1. get_portfolio_context()
+context -> insight_service : 2. create_financial_insight(context)
+insight_service -> vis_service : 3. create_visualization_sink(insight)
+vis_service -> output : 4. Package Response
+@enduml
+----
+
+=== Key Improvements
+* **Modularity**: Each step in the pipeline is a discrete component with a well-defined interface, making it easier to test and replace.
+* **Jac-Migration-Ready**: The use of `# TODO (Jac)` blocks and pure-functional logic ensures that each component can be independently migrated to a Jac walker in Phase 4.
+* **Graph-Native Reasoning**: The `FinancialInsight` primitive explicitly models insights as a graph, aligning with the project's long-term goal of deep graph-native portfolio management.
+* **Lazy Data Loading**: New financial lazy readers (`read_price_history_lazy`, `read_correlation_matrix_lazy`) enable the engine to handle large datasets efficiently.
+
+== Phase 3 Refactor: Pure Functional Vibe Pipeline - Folder-Per-Artifact Structure
+
+To further enhance modularity and prepare for Phase 4 Jac walker migration, the core layer has been refactored into a strict folder-per-artifact structure. This transformation ensures that the Vibe Pipeline is a pure functional data pipeline: `immutable_input -> pure_function -> immutable_output_artifact`.
+
+=== Folder-Per-Artifact Structure
+
+The new structure isolates primitives and services for each core domain:
+
+[source,bash]
+----
+src/core/
+├── primitives/
+│   ├── portfolio/
+│   │   ├── __init__.py
+│   │   ├── portfolio_context.py
+│   │   └── portfolio.py
+│   ├── financial_insight/
+│   │   ├── __init__.py
+│   │   └── financial_insight.py
+│   └── visualization_sink/
+│       ├── __init__.py
+│       └── visualization_sink.py
+├── services/
+│   ├── portfolio/
+│   │   ├── __init__.py
+│   │   └── portfolio_service.py
+│   ├── financial_insight/
+│   │   ├── __init__.py
+│   │   └── financial_insight_service.py
+│   ├── visualization_sink/
+│   │   ├── __init__.py
+│   │   ├── visualization_service.py
+│   │   └── graph_utils.py
+│   └── shared/
+│       └── readers/
+│           └── safe_lambda_readers.py
+└── __init__.py
+----
+
+=== Pure Transformation Sequence
+
+Each step in the Vibe Pipeline is now a discrete, immutable transformation:
+
+[mermaid, target="vibe-pipeline-transformation", format="png"]
+----
+graph TD
+    A[PromptInput] -->|get_portfolio_context| B(PortfolioContext)
+    B -->|create_financial_insight| C(FinancialInsight)
+    C -->|create_visualization_sink| D(VisualizationSink)
+    D -->|Package| E[PromptOutput]
+----
+
+=== Benefits
+* **Maximum Decoupling**: Each service only imports its own primitives and the single upstream artifact it needs.
+* **Testability**: Artifacts can be tested in isolation with minimal dependencies.
+* **Jac Readiness**: The modular layout directly maps to future Jac walker boundaries.
+* **Backwards Compatibility**: Re-exports in `__init__.py` files ensure existing public APIs (like `create_visualization_sink(prompt)`) remain unchanged.
+
+=== Updated Jac TODO Migration Plan
+* **Modular Walkers**: Each subfolder in `src/core/services/` will eventually be replaced by a dedicated Jac walker or a set of related walkers.
+* **Artifact Nodes**: Primitives will map directly to Jac node definitions, with `to_dict` and `from_dict` methods facilitating seamless interaction with Python-based transport layers.
+* **Registry Lookup**: Replace `SafeLambdaReaderRegistry` with Jac node/edge properties or walker logic.
+* **LLM Calls**: Replace Python protocol methods with `by llm()` calls inside Jac walkers.
+* **Graph Building**: Replace Python dictionary mapping with native Jac node/edge creation.
+* **Schema Management**: Use Jac's native type system and LLM integration for dynamic schema handling.

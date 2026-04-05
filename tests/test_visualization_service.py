@@ -2,7 +2,7 @@ import unittest
 import json
 import os
 from pathlib import Path
-from src.core.services.visualization_service import create_visualization_sink
+from src.core.services.visualization_sink import create_visualization_sink
 from src.core.primitives.visualization_sink import VisualizationSink
 from tests.utils import setup_test_logging
 
@@ -83,6 +83,25 @@ class TestVisualizationService(unittest.TestCase):
             if original_data["nodes"]:
                 orig_node_data = original_data["nodes"][0].get("data")
                 self.assertEqual(sink.nodes[0].data, orig_node_data, f"Nested data mismatch in {synth_path.name}")
+
+    def test_create_sink_from_financial_insight(self) -> None:
+        from src.core.services.financial_insight import create_financial_insight
+        prompt = "Perform a complete portfolio risk assessment for META, PLTR, and SPY"
+        insight = create_financial_insight(prompt)
+
+        sink = create_visualization_sink(prompt, financial_insight=insight)
+
+        self.assertEqual(sink.insight_id, insight.insight_id)
+        self.assertEqual(sink.prompt, prompt)
+        self.assertEqual(sink.quant_summary, insight.quant_summary)
+        # In Phase 3, nodes are preserved by the derive logic
+        self.assertEqual(sink.nodes, insight.nodes)
+        self.assertEqual(sink.edges, insight.edges)
+        self.assertEqual(sink.root_node_id, insight.root_node_id)
+        # Should have the prompt from synthdata6 or derived if not available
+        self.assertTrue(sink.visualizer_pseudo_prompt.startswith("Create a treemap") or 
+                        sink.visualizer_pseudo_prompt.startswith("Visualizing"))
+        self.assertIn("heatmap", sink.suggested_chart_types)
 
 if __name__ == "__main__":
     unittest.main()

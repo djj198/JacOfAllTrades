@@ -17,7 +17,10 @@ Defines the environment, requirements, and constraints.
 
 ### 2. Architecture Documents (`docs/architecture/`)
 Contains consolidated system architecture and detailed product design.
-- [Architecture Design Document](architecture/ocusciences-architecture.adoc): Consolidated system architecture, Node B architecture, and detailed specification.``
+- [Architecture Design Document](architecture/project-architecture.adoc): Consolidated system architecture, Node B architecture, and detailed specification.
+- [Visualization Sink Specification](architecture/visualization-sink.adoc): Requirements for the front-end/visualization layer.
+- [Graph Specification](architecture/jack-of-all-trades.adoc): Graph-theoretic specification of the system.
+- [Unit Testing Protocol](architecture/unit-testing.adoc): Testing guidelines and patterns.
 
 ### 3. Traceability Documents (`docs/traceability/`)
 Demonstrates compliance and verification.

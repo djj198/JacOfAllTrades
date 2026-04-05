@@ -1,0 +1,1 @@
+from src.core.services.financial_insight.financial_insight_service import create_financial_insight

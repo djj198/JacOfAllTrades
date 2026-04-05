@@ -82,14 +82,13 @@ The delivered `VisualizationSink` will always arrive as a single JSON object con
 * Keep rendering fast even for insights with 20–50 dynamic nodes.
 * Support compression hints if the agent ever adds them.
 
-== How the Agent Produces the VisualizationSink (Brief)
+== How the Agent Produces the VisualizationSink (Vibe Pipeline)
 
-1. User prompt arrives.
-2. Jac walker traverses the ticker-first structural graph (lazy MCP pulls as needed).
-3. Quant LLM outputs **structured schemas** describing exactly the classes needed for this insight.
-4. Agent dynamically creates immutable Pydantic models from those schemas.
-5. Final LLM step writes the `visualizer_pseudo_prompt`.
-6. A single immutable `VisualizationSink` is returned.
+The agent uses a 3-step **Vibe Pipeline** to produce the sink:
+
+1. **Portfolio Context**: Retrieves an immutable snapshot of the user's current holdings.
+2. **Insight Engine**: A pure-functional service that generates a `FinancialInsight` (graph of nodes and edges).
+3. **Visualization Sink creation**: Derives the final `VisualizationSink` from the `FinancialInsight`, adding visualizer-specific metadata.
 
 The visualization layer never needs to know the structure in advance — the payload is always self-describing.
 
