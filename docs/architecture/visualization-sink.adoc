@@ -1,0 +1,105 @@
+= VisualizationSink Requirements – JOATberg Terminal (Visualization Layer)
+:version: 1.3
+:date: 2026-04-05
+:project: JacHacks 2026 - JOAT ACP Agent
+:status: Requirements for Front-End / Visualization Layer Developer
+
+== Overview
+
+The JOAT ACP agent will deliver a **VisualizationSink** in every `ACP_RESPONSE` (or `session/update` notification) after processing a financial insight.
+
+This sink is **completely dynamic** at runtime:
+- The Quant LLM generates the exact class prototypes (via Pydantic schemas) for each insight.
+- Every `VisualizationSink` is unique to the user prompt.
+- There is **no fixed schema** across sessions.
+
+The visualization layer (JOATberg terminal) must be prepared to handle **arbitrary, self-describing** insight graphs while remaining safe, performant, and immutable.
+
+These requirements are framed as **things the visualization layer must prepare for**.
+
+=== 1. Dynamic Structure & Self-Describing Payload
+
+The delivered `VisualizationSink` will always arrive as a single JSON object containing:
+* `insight_id`, `prompt`, `created_at`, `quant_summary`
+* `nodes[]` — array of dynamic nodes (each with its own `schema` + `data`)
+* `edges[]` — array of insight edges (natural-language reasoning)
+* `root_node_id`
+* `visualizer_pseudo_prompt` (primary rendering instruction)
+* `suggested_chart_types[]` (hints)
+* `rendered_payload` (optional pre-rendered data)
+
+**Preparation needed**:
+* Never hard-code field names or node structures.
+* Always read `node.schema` first to understand `node.data`.
+* Treat the entire payload as **immutable** (read-only).
+
+=== 2. Dynamic Parsing & Schema Interpretation
+
+**Preparation needed**:
+* Implement a generic schema walker that can handle any LLM-invented fields (strings, numbers, lists, nested objects).
+* Support recursive schemas (nodes can contain other dynamic nodes).
+* Gracefully fall back to raw `data` display if schema parsing fails.
+* Use safe attribute access everywhere (`obj.get("key", null)`).
+
+=== 3. Visualization Rendering Capabilities
+
+**Preparation needed**:
+* Treat `visualizer_pseudo_prompt` as the **source of truth** for what to draw.
+* Support at minimum the chart types the agent may suggest:
+  ** `stacked_xy`
+  ** `annotated_line`
+  ** `network_graph`
+  ** `heatmap`
+* If `rendered_payload` is present, prefer it for speed (e.g. Plotly JSON).
+* Otherwise, generate the chart yourself from the nodes/edges.
+* Enable interactive drill-down: clicking any node shows its full `schema` + `data`.
+
+=== 4. Progressive & Streaming UX
+
+**Preparation needed**:
+* Handle `session/update` notifications during insight building ("Thinking…", "Building correlation graph…").
+* Display partial results gracefully (e.g. `quant_summary` alone).
+* Show a clean final state once the full `VisualizationSink` arrives.
+
+=== 5. Error & Edge-Case Handling
+
+**Preparation needed**:
+* Empty nodes/edges → render text-only insight using `quant_summary`.
+* Malformed schema → fallback to generic tree/table view of raw data.
+* Large payloads (bounded price history) → lazy rendering or virtualization.
+* Missing optional fields → never crash; use defaults.
+
+=== 6. Reproducibility & Persistence
+
+**Preparation needed**:
+* Store the entire `VisualizationSink` JSON locally (keyed by `insight_id`).
+* Allow users to reopen any previous insight and see exactly the same graph and charts.
+
+=== 7. ACP Integration & Performance
+
+**Preparation needed**:
+* Expect `VisualizationSink` inside the standard ACP `result` field.
+* Keep rendering fast even for insights with 20–50 dynamic nodes.
+* Support compression hints if the agent ever adds them.
+
+== How the Agent Produces the VisualizationSink (Brief)
+
+1. User prompt arrives.
+2. Jac walker traverses the ticker-first structural graph (lazy MCP pulls as needed).
+3. Quant LLM outputs **structured schemas** describing exactly the classes needed for this insight.
+4. Agent dynamically creates immutable Pydantic models from those schemas.
+5. Final LLM step writes the `visualizer_pseudo_prompt`.
+6. A single immutable `VisualizationSink` is returned.
+
+The visualization layer never needs to know the structure in advance — the payload is always self-describing.
+
+== Next Steps & Recommendations
+
+* Build a generic `DynamicInsightRenderer` component that:
+  ** Reads schemas
+  ** Interprets `visualizer_pseudo_prompt`
+  ** Renders the suggested chart types
+* Add example `VisualizationSink` JSON files to `data/raw/` for local testing.
+* Document any new chart types you implement in `docs/architecture/project-architecture.adoc`.
+
+This design gives the front-end maximum flexibility while keeping the contract simple, safe, and future-proof.

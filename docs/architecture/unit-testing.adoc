@@ -1,0 +1,77 @@
+= Task: Generate Synthetic VisualizationSink JSON Files Using AI
+:version: 1.0
+:date: 2026-04-05
+:project: JacHacks 2026 - JOAT ACP Agent
+:audience: Non-programmer "vibe coder" (you know how to use AI tools and can copy-paste JSON)
+:goal: Create realistic test data so the front-end developer can write unit tests
+
+== Your Mission (Super Simple)
+
+You are going to create **fake but realistic** `VisualizationSink` JSON files using an AI (Grok, Claude, ChatGPT, etc.).
+
+These files will be used by the front-end developer to test how the JOATberg terminal renders **dynamic financial insights** — the cool “MRI-brain-scan” style graphs we talked about.
+
+You don’t need to write any real code. You just need to:
+1. Talk to an AI.
+2. Get good JSON files.
+3. Save them in the right folder.
+
+That’s it. The front-end person will use these files to test their rendering logic without waiting for the full ACP agent to be ready.
+
+== Why This Is Important
+
+The `VisualizationSink` is **completely dynamic** — every insight looks a little different because the LLM invents new fields on the fly.
+The front-end needs lots of example files to test:
+* Parsing schemas
+* Rendering charts
+* Handling edge cases
+* Interactive drill-down
+
+Your synthetic files = instant test data = the front-end person can start writing unit tests **today**.
+
+== What a VisualizationSink Looks Like
+
+It is one big JSON object with these main parts (you don’t need to memorize this — just copy the template below):
+
+* `insight_id`, `prompt`, `created_at`, `quant_summary`
+* `nodes[]` — list of dynamic nodes (each has `schema` + `data`)
+* `edges[]` — list of “insight” edges with natural-language text
+* `root_node_id`
+* `visualizer_pseudo_prompt` — the exact instructions for what chart to draw
+* `suggested_chart_types[]`
+* `rendered_payload` (optional)
+
+See `docs/requirements/visualization-sink-requirements.adoc` for the full details if you want to go deeper.
+
+== Step-by-Step: How to Generate Synthetic Files
+
+1. **Open your favorite AI chat** (Grok, Claude, etc.).
+2. **Copy and paste the reusable prompt** below (customize the **prompt** part each time).
+3. **Ask the AI to output only valid JSON** (no extra text).
+4. **Copy the JSON** the AI gives you.
+5. **Save it** as a `.json` file in the project folder:
+   `data/raw/synthetic_visualization_sinks/`
+   Example filename: `meta_sp_correlation_001.json`
+6. **Repeat** 8–15 times with different scenarios.
+
+=== Reusable AI Prompt Template (Copy-Paste This)
+
+```text
+You are helping generate synthetic test data for the JOAT ACP agent.
+
+Create a realistic, valid VisualizationSink JSON object for this user prompt:
+
+"USER_PROMPT_HERE"
+
+Requirements:
+- The JSON must be complete and valid.
+- Use the exact structure from the VisualizationSink requirements (nodes, edges, schema inside each node, visualizer_pseudo_prompt, etc.).
+- Make the data feel like real financial insight (tickers, prices, dates, correlations, patterns).
+- Make the schemas dynamic — invent reasonable fields for this specific insight.
+- Include a helpful quant_summary.
+- Include a clear visualizer_pseudo_prompt that describes exactly what chart to draw.
+- suggested_chart_types should be from: ["stacked_xy", "annotated_line", "network_graph", "heatmap"]
+- rendered_payload can be an empty object {} for now.
+- Output ONLY the JSON, nothing else.
+
+User prompt: USER_PROMPT_HERE
