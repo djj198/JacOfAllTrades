@@ -1,13 +1,19 @@
+import os
 import sys
 import asyncio
 import logging
 from src.io import run_stdio_transport
 
-# Standard logging configuration (output to stderr to avoid corrupting stdio transport)
+# Ensure the log directory exists
+LOG_PATH = sys.argv[1] if len(sys.argv) > 1 else "logs/agent.log"
+os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+
+# Standard logging configuration
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    stream=sys.stderr
+    filename=LOG_PATH,
+    filemode='a'
 )
 
 def main() -> None:

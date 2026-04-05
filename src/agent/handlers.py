@@ -1,12 +1,15 @@
 import logging
 from typing import Any, Dict, Callable, Coroutine
-from agent_client_protocol.models import (
+from acp import (
     InitializeRequest, InitializeResponse,
-    SessionNewRequest, SessionNewResponse,
-    SessionPromptRequest, SessionPromptResponse,
-    SessionUpdate,
-    Capabilities, AgentInfo
+    NewSessionRequest as SessionNewRequest,
+    NewSessionResponse as SessionNewResponse,
+    PromptRequest as SessionPromptRequest,
+    PromptResponse as SessionPromptResponse,
+    SessionNotification as SessionUpdate,
+    PROTOCOL_VERSION
 )
+from acp.schema import AgentCapabilities as Capabilities, Implementation as AgentInfo, AgentMessageChunk
 from .core import JacTradingAgent
 
 logger = logging.getLogger(__name__)
@@ -15,9 +18,8 @@ async def handle_initialize(agent: JacTradingAgent, request: InitializeRequest) 
     """Handle ACP initialization and capabilities reporting."""
     logger.info("Initializing Jac ACP Trading Agent MVP")
     return InitializeResponse(
-        capabilities=Capabilities(
-            sessions=True
-        ),
+        protocol_version=PROTOCOL_VERSION,
+        agent_capabilities=Capabilities(),
         agent_info=AgentInfo(
             name="JacTradingAgentMVP",
             version="0.1.0"
@@ -45,13 +47,24 @@ async def handle_session_prompt(
     # 1. Send update notification for responsive UX
     await send_notification(SessionUpdate(
         session_id=request.session_id,
-        text="Analyzing portfolio graph state..."
+        update=AgentMessageChunk(
+            session_update="agent_message",
+            text="Analyzing portfolio graph state..."
+        )
     ))
     
     # TODO: Add logic to delegate to Jac walkers and by llm() here
     
-    # 2. Return final static response for MVP
-    return SessionPromptResponse(
+    # 2. Return final text via notification
+    await send_notification(SessionUpdate(
         session_id=request.session_id,
-        text="Hello from Jac ACP Trading Agent MVP. Graph brain coming soon."
+        update=AgentMessageChunk(
+            session_update="agent_message",
+            text="Hello from Jac ACP Trading Agent MVP. Graph brain coming soon."
+        )
+    ))
+    
+    # 3. Signal end of turn
+    return SessionPromptResponse(
+        stop_reason="end_turn"
     )
