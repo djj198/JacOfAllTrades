@@ -1,12 +1,7 @@
 {
-  "insight_id": "vis_meta_pltr_sector_comparison_20260405",
-  "prompt": "Compare META and PLTR fundamentals and position performance within my portfolio",
-  "created_at": "2026-04-05T08:35:00Z",
-  "quant_summary": { "title": "Sector Peer Comparison", "summary_text": "META outperforms PLTR on profitability but PLTR has higher growth momentum.", "key_metrics": { "meta_pe": 25.4, "pltr_pe": 68.9, "meta_pnl": 6425, "pltr_pnl": 3120 } },
-  "nodes": [ { "node_id": "peer_structural_comparison", "schema": { "tickers": "object[]", "metrics": "object" }, "data": { "tickers": [ { "symbol": "META" }, { "symbol": "PLTR" } ], "metrics": { "revenue_growth": [28.1, 41.2], "position_impact": [6425, 3120] } } } ],
-  "edges": [],
-  "root_node_id": "peer_structural_comparison",
-  "visualizer_pseudo_prompt": "Grouped bar chart comparing fundamentals and position PnL side-by-side.",
-  "suggested_chart_types": ["stacked_xy"],
-  "rendered_payload": {}
+  "insight_id": "fixed-id-9",
+  "quant_summary": {"title": "Summary", "summary_text": "Sample"},
+  "nodes": [{"node_id": "root", "schema": {}, "data": {}}, {"node_id": "n1", "schema": {}, "data": {}}, {"node_id": "n2", "schema": {}, "data": {}}],
+  "edges": [{"source_id": "root", "target_id": "n1", "reasoning": "r"}, {"source_id": "root", "target_id": "n2", "reasoning": "r"}],
+  "visualizer_pseudo_prompt": "Create a visualization showing Compare META and PLTR fundamentals and position performance relative to the current portfolio concentration."
 }

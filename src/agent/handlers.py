@@ -1,21 +1,31 @@
 import logging
+import json
 from src.interfaces.protocols import PromptInput, PromptOutput
 from src.core.services.visualization_service import create_visualization_sink
 
 logger = logging.getLogger(__name__)
 
+# Hardcoded portfolio path
+PORTFOLIO_PATH = "/home/theodoric/DataspellProjects/JacOfAllTrades/data/raw/synthetic_visualization_sinks/portfolio.json"
+
 class JacPromptHandler:
     """
     High-level synchronous handler for ACP prompts.
-    This serves as the future bridge to the Jac graph brain.
-    Current implementation is a pure sync core service delegation.
+    Hardcodes loading of portfolio.json for rich visualization sink generation.
     """
     def handle_prompt(self, input_data: PromptInput) -> PromptOutput:
         logger.info(f"Handling prompt: {input_data.prompt} (session={input_data.session_id})")
         
-        # 1. Generate the dynamic visualization sink based on the prompt
-        # In the future, this will call Jac walkers.
-        sink = create_visualization_sink(input_data.prompt)
+        # Load portfolio data
+        portfolio_data = {}
+        try:
+            with open(PORTFOLIO_PATH, "r") as f:
+                portfolio_data = json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load portfolio.json from {PORTFOLIO_PATH}: {e}")
+
+        # 1. Generate the dynamic visualization sink based on the prompt and portfolio
+        sink = create_visualization_sink(prompt=input_data.prompt, portfolio_context=portfolio_data)
         
         # 2. Package output according to Protocol
         return PromptOutput(

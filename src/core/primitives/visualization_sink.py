@@ -5,9 +5,9 @@ from src.core.primitives.financial_insight import InsightNode, InsightEdge, Quan
 @dataclass(frozen=True)
 class VisualizationSink:
     insight_id: str
-    prompt: str
-    created_at: str
-    quant_summary: QuantSummary
+    prompt: str = ""
+    created_at: str = ""
+    quant_summary: QuantSummary = field(default_factory=lambda: QuantSummary("Empty", "No summary"))
     nodes: tuple[InsightNode, ...] = field(default_factory=tuple)
     edges: tuple[InsightEdge, ...] = field(default_factory=tuple)
     root_node_id: Optional[str] = None
