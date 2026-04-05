@@ -41,9 +41,13 @@ class AcpTransport(Agent):
             )
         )
 
-    async def new_session(self, cwd: str, **kwargs: Any) -> NewSessionResponse:
-        session_id = kwargs.get("session_id", "default-session")
-        mcp_config = kwargs.get("mcp_config", {})
+    async def new_session(self, cwd: str = ".", **kwargs: Any) -> NewSessionResponse:
+        # Generate session_id if not provided (though in JSON-RPC it might be a param)
+        import uuid
+        session_id = kwargs.get("session_id") or kwargs.get("sessionId") or str(uuid.uuid4())
+        
+        # Defensive parsing for mcpServers (accept empty list or missing key)
+        mcp_config = kwargs.get("mcpServers") or kwargs.get("mcp_config") or []
         
         logger.info(f"New session: {session_id} (cwd={cwd})")
         self.session_manager.create_session(session_id, mcp_config, cwd)
@@ -55,8 +59,19 @@ class AcpTransport(Agent):
         session = self.session_manager.get_session(session_id)
         mcp_config = session.mcp_config if session else {}
         
+        # Handle prompt correctly (could be string or list of blocks)
+        prompt_text = ""
+        if isinstance(prompt, str):
+            prompt_text = prompt
+        elif isinstance(prompt, list):
+            for block in prompt:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    prompt_text += block.get("text", "")
+                elif hasattr(block, "text"):
+                    prompt_text += block.text
+        
         input_data = PromptInput(
-            prompt=str(prompt),
+            prompt=prompt_text,
             session_id=session_id,
             mcp_config=mcp_config,
             cwd=session.cwd if session else None

@@ -1,0 +1,122 @@
+{
+    "insight_id": "vis_msft_revenue_growth_decomp_2026q1",
+    "prompt": "What has been the year-over-year revenue growth rate for MSFT over the last four quarters, and is the growth coming from selling more units or raising prices?",
+    "created_at": "2026-04-05T06:58:00Z",
+    "quant_summary": "MSFT reported YoY revenue growth of 15.2%, 17.8%, 16.4%, and 14.9% over the last four quarters (Q1 FY26 to Q4 FY25). Growth has been primarily driven by volume increases (average 11.8% unit growth) with a smaller contribution from price/mix (average 4.1%). Cloud segment (Azure) continues to show the strongest volume acceleration.",
+    "nodes": [
+        {
+            "node_id": "msft_revenue_growth",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "quarter",
+                        "type": "string"
+                    },
+                    {
+                        "name": "revenue_usd_billions",
+                        "type": "number"
+                    },
+                    {
+                        "name": "yoy_growth_pct",
+                        "type": "number"
+                    },
+                    {
+                        "name": "volume_growth_pct",
+                        "type": "number"
+                    },
+                    {
+                        "name": "price_mix_growth_pct",
+                        "type": "number"
+                    }
+                ]
+            },
+            "data": [
+                {
+                    "quarter": "Q1 FY26",
+                    "revenue_usd_billions": 62.1,
+                    "yoy_growth_pct": 15.2,
+                    "volume_growth_pct": 12.3,
+                    "price_mix_growth_pct": 2.9
+                },
+                {
+                    "quarter": "Q4 FY25",
+                    "revenue_usd_billions": 60.8,
+                    "yoy_growth_pct": 17.8,
+                    "volume_growth_pct": 13.1,
+                    "price_mix_growth_pct": 4.7
+                },
+                {
+                    "quarter": "Q3 FY25",
+                    "revenue_usd_billions": 58.4,
+                    "yoy_growth_pct": 16.4,
+                    "volume_growth_pct": 11.5,
+                    "price_mix_growth_pct": 4.9
+                },
+                {
+                    "quarter": "Q2 FY25",
+                    "revenue_usd_billions": 56.9,
+                    "yoy_growth_pct": 14.9,
+                    "volume_growth_pct": 10.4,
+                    "price_mix_growth_pct": 4.5
+                }
+            ]
+        },
+        {
+            "node_id": "msft_segment_breakdown",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "quarter",
+                        "type": "string"
+                    },
+                    {
+                        "name": "segment",
+                        "type": "string"
+                    },
+                    {
+                        "name": "revenue_usd_billions",
+                        "type": "number"
+                    },
+                    {
+                        "name": "yoy_growth_pct",
+                        "type": "number"
+                    }
+                ]
+            },
+            "data": [
+                {
+                    "quarter": "Q1 FY26",
+                    "segment": "Intelligent Cloud",
+                    "revenue_usd_billions": 28.7,
+                    "yoy_growth_pct": 21.4
+                },
+                {
+                    "quarter": "Q1 FY26",
+                    "segment": "Productivity & Business Processes",
+                    "revenue_usd_billions": 20.1,
+                    "yoy_growth_pct": 12.8
+                },
+                {
+                    "quarter": "Q1 FY26",
+                    "segment": "More Personal Computing",
+                    "revenue_usd_billions": 13.3,
+                    "yoy_growth_pct": 8.9
+                }
+            ]
+        }
+    ],
+    "edges": [
+        {
+            "source_node_id": "msft_revenue_growth",
+            "target_node_id": "msft_segment_breakdown",
+            "insight_text": "Revenue growth decomposition shows that volume increases account for ~75% of total YoY growth on average, while price/mix contributes the remaining ~25%. Intelligent Cloud (Azure) is the primary volume driver."
+        }
+    ],
+    "root_node_id": "msft_revenue_growth",
+    "visualizer_pseudo_prompt": "Create a dual-axis chart for Microsoft (MSFT) revenue analysis over the last four quarters. On the primary Y-axis (left), show a stacked column chart breaking down YoY revenue growth rate into Volume Growth % (blue) and Price/Mix Growth % (orange), with total YoY growth % labeled on top of each stacked bar. On the secondary Y-axis (right), plot the absolute revenue in USD billions as a line (dark green). X-axis: quarters labeled Q1 FY26, Q4 FY25, Q3 FY25, Q2 FY25. Include a clear title 'MSFT YoY Revenue Growth: Volume vs Price/Mix Contribution' and a subtitle showing the average volume contribution (11.8%) vs price/mix (4.1%). Add data labels and a legend.",
+    "suggested_chart_types": [
+        "stacked_xy",
+        "annotated_line"
+    ],
+    "rendered_payload": {}
+}

@@ -1,0 +1,109 @@
+{
+  "insight_id": "vis_portfolio_risk_full_20260405",
+  "prompt": "Perform a complete portfolio risk assessment for my holdings in META, PLTR, and SPY including VaR, correlations, and position impact",
+  "created_at": "2026-04-05T08:15:00Z",
+  "quant_summary": {
+    "title": "Portfolio Risk Snapshot",
+    "summary_text": "Total portfolio VaR (95%, 1-day) is $18,420. META dominates downside risk (62% contribution). Correlation matrix shows low diversification benefit between PLTR and META.",
+    "key_metrics": {
+      "total_value": 124500,
+      "var_95_1day": 18420,
+      "portfolio_beta": 1.34,
+      "diversification_score": 0.41
+    }
+  },
+  "nodes": [
+    {
+      "node_id": "portfolio_structural_snapshot",
+      "schema": {
+        "portfolio_id": "string",
+        "total_value": "number",
+        "tickers": [
+          {
+            "symbol": "string",
+            "fundamentals": {
+              "pe_ratio": "number",
+              "market_cap_billions": "number",
+              "dividend_yield": "number"
+            },
+            "user_allocation": {
+              "quantity": "number",
+              "avg_cost_basis": "number",
+              "unrealized_pnl": "number",
+              "weight_pct": "number"
+            }
+          }
+        ]
+      },
+      "data": {
+        "portfolio_id": "port-abc123",
+        "total_value": 124500,
+        "tickers": [
+          {
+            "symbol": "META",
+            "fundamentals": { "pe_ratio": 25.4, "market_cap_billions": 1240, "dividend_yield": 0.31 },
+            "user_allocation": { "quantity": 85, "avg_cost_basis": 412.75, "unrealized_pnl": 6425, "weight_pct": 48.2 }
+          },
+          {
+            "symbol": "PLTR",
+            "fundamentals": { "pe_ratio": 68.9, "market_cap_billions": 98.4, "dividend_yield": 0.0 },
+            "user_allocation": { "quantity": 420, "avg_cost_basis": 18.90, "unrealized_pnl": 3120, "weight_pct": 31.7 }
+          },
+          {
+            "symbol": "SPY",
+            "fundamentals": { "pe_ratio": 22.1, "market_cap_billions": 0, "dividend_yield": 1.28 },
+            "user_allocation": { "quantity": 65, "avg_cost_basis": 512.30, "unrealized_pnl": -840, "weight_pct": 20.1 }
+          }
+        ]
+      }
+    },
+    {
+      "node_id": "correlation_matrix",
+      "schema": {
+        "assets": "string[]",
+        "matrix": "number[][]",
+        "period_days": "integer"
+      },
+      "data": {
+        "assets": ["META", "PLTR", "SPY"],
+        "matrix": [
+          [1.00, 0.68, 0.82],
+          [0.68, 1.00, 0.55],
+          [0.82, 0.55, 1.00]
+        ],
+        "period_days": 252
+      }
+    },
+    {
+      "node_id": "var_breakdown",
+      "schema": {
+        "var_95_1day": "number",
+        "component_contributions": "object[]"
+      },
+      "data": {
+        "var_95_1day": 18420,
+        "component_contributions": [
+          { "ticker": "META", "contribution_pct": 62.4, "absolute_dollar": 11490 },
+          { "ticker": "PLTR", "contribution_pct": 28.1, "absolute_dollar": 5175 },
+          { "ticker": "SPY", "contribution_pct": 9.5, "absolute_dollar": 1755 }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source_node_id": "portfolio_structural_snapshot",
+      "target_node_id": "var_breakdown",
+      "insight_text": "META position drives 62% of portfolio VaR due to high weight and volatility"
+    },
+    {
+      "source_node_id": "correlation_matrix",
+      "target_node_id": "portfolio_structural_snapshot",
+      "insight_text": "Limited diversification between META and PLTR (correlation 0.68)"
+    }
+  ],
+  "root_node_id": "portfolio_structural_snapshot",
+  "visualizer_pseudo_prompt": "Create a treemap + heatmap dashboard. Treemap shows current weights colored by unrealized PnL. Heatmap displays the correlation matrix. Add a waterfall chart for VaR component contributions. Title: 'Portfolio Risk Deep Dive – META, PLTR, SPY'.",
+  "suggested_chart_types": ["heatmap", "stacked_xy"],
+  "rendered_payload": {}
+}

@@ -5,9 +5,8 @@ import logging
 from src.transport.stdio_handler import run_stdio_transport
 
 # Ensure the log directory exists
-LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)
-LOG_PATH = os.path.join(LOG_DIR, "agent.log")
+LOG_PATH = "/home/theodoric/DataspellProjects/JacOfAllTrades/logs/agent.log"
+os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
 
 # Configure logging to file and stderr (stdout is reserved for ACP)
 logging.basicConfig(
@@ -18,6 +17,7 @@ logging.basicConfig(
         logging.FileHandler(LOG_PATH)
     ]
 )
+logging.captureWarnings(True)
 
 logger = logging.getLogger("main")
 

@@ -5,7 +5,7 @@ from typing import Protocol, Any, Dict, List, Optional
 class PromptInput:
     prompt: str
     session_id: str
-    mcp_config: Dict[str, Any] = field(default_factory=dict)
+    mcp_config: Any = field(default_factory=list)
     cwd: Optional[str] = None
 
 @dataclass(frozen=True)

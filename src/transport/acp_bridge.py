@@ -26,7 +26,10 @@ class AcpBridge:
         
         try:
             # Measure serialization size before calling
-            input_size = len(json.dumps(input_data.prompt)) # simplified size
+            input_size = len(json.dumps(input_data.prompt))
+            
+            if DEBUG_TRANSPORT:
+                logger.info(f"[BRIDGE] input_size={input_size} bytes")
             
             output = await asyncio.to_thread(self.handler.handle_prompt, input_data)
             
