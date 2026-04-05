@@ -1,18 +1,35 @@
 from dataclasses import dataclass, field, asdict
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
+from src.core.primitives.ticker import Ticker
+from src.core.primitives.portfolio import Portfolio
+from src.core.primitives.data_ref import DataRef
 
 @dataclass(frozen=True)
 class InsightNode:
     node_id: str
     schema: Dict[str, Any]
-    data: Any  # data can be Dict or List based on synth data
+    data: Union[Ticker, Portfolio, DataRef, Dict[str, Any], List[Any], Any]  # data can be Dict or List based on synth data
 
     def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
+        d = asdict(self)
+        # Handle the Union types if asdict doesn't do it right, but it should for frozen dataclasses
+        return d
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "InsightNode":
-        return cls(**data)
+        node_id = data.get("node_id", "")
+        schema = data.get("schema", {})
+        data_val = data.get("data")
+
+        if isinstance(data_val, dict):
+            if "symbol" in data_val and "name" in data_val:
+                data_val = Ticker.from_dict(data_val)
+            elif "tickers" in data_val and "id" in data_val:
+                data_val = Portfolio.from_dict(data_val)
+            elif "path" in data_val and "reader_name" in data_val:
+                data_val = DataRef.from_dict(data_val)
+
+        return cls(node_id=node_id, schema=schema, data=data_val)
 
 @dataclass(frozen=True)
 class InsightEdge:

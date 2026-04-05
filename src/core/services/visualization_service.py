@@ -1,10 +1,32 @@
 import uuid
 import json
 import os
+import logging
 from pathlib import Path
 from datetime import datetime, timezone
+from typing import Dict, Any
 from src.core.primitives.visualization_sink import VisualizationSink
 from src.core.primitives.financial_insight import InsightNode, InsightEdge, QuantSummary
+
+from src.core.services.visualization_sink_factory import VisualizationSinkFactory, VisualizationSinkFactoryError
+from src.interfaces.protocols import QuantLLMProtocol
+
+logger = logging.getLogger(__name__)
+
+# TODO (Jac): BEGIN - Replace this Python block with Jac walker + by llm() equivalent
+class StubQuantLLMProvider:
+    """
+    MVP Stub implementation of QuantLLMProtocol.
+    In Phase 2, this provides basic schema/data for testing the factory.
+    By default, it raises NotImplementedError to trigger the synthetic fallback
+    and preserve backwards compatibility for existing tests.
+    """
+    def generate_schema(self, prompt: str) -> Dict[str, Any]:
+        raise NotImplementedError("Actual LLM schema generation not yet implemented.")
+
+    def generate_insight_data(self, prompt: str, schema: Dict[str, Any]) -> Dict[str, Any]:
+        raise NotImplementedError("Actual LLM insight data generation not yet implemented.")
+# TODO (Jac): END - Jac replacement block
 
 def _load_synth_if_exists(file_path: Path, prompt: str, default_id: str, default_at: str) -> VisualizationSink:
     if file_path.exists():
@@ -21,7 +43,7 @@ def _load_synth_if_exists(file_path: Path, prompt: str, default_id: str, default
         quant_summary=QuantSummary("Stub", "File not found")
     )
 
-def create_visualization_sink(prompt: str) -> VisualizationSink:
+def _create_synthetic_fallback(prompt: str) -> VisualizationSink:
     insight_id = str(uuid.uuid4())
     created_at = datetime.now(timezone.utc).isoformat()
     
@@ -96,3 +118,20 @@ def create_visualization_sink(prompt: str) -> VisualizationSink:
         visualizer_pseudo_prompt=visualizer_pseudo_prompt,
         suggested_chart_types=suggested_chart_types
     )
+
+def create_visualization_sink(prompt: str) -> VisualizationSink:
+    """
+    Public API to create a VisualizationSink.
+    Phase 2: Attempts to use the VisualizationSinkFactory first, falls back to synthetic data.
+    """
+    # TODO (Jac): BEGIN - Replace this block with direct Jac walker call
+    # walker build_visualization_sink { ... }
+    try:
+        # In a real scenario, the llm_provider would be injected or retrieved from session state.
+        # For now we use the stub for testing the factory flow.
+        llm_provider = StubQuantLLMProvider()
+        return VisualizationSinkFactory.create(prompt, llm_provider)
+    except Exception as e:
+        logger.info(f"VisualizationSinkFactory failed (expected for stubs), falling back to synthetic: {e}")
+        return _create_synthetic_fallback(prompt)
+    # TODO (Jac): END - Jac replacement block
