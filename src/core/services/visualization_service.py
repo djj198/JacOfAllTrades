@@ -24,7 +24,6 @@ def create_visualization_sink(prompt: str, portfolio_context: Dict[str, Any] | N
         api_key = (
             os.getenv("ANTHROPIC_API_KEY")
             or os.getenv("LLM_API_KEY")
-            # or "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"
         # ← your key here
         )
         
