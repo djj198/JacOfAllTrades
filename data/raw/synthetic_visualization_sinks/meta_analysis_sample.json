@@ -1,31 +1,50 @@
 {
-  "insight_id": "9873328f-63ce-4802-8fea-764793e0df6c",
+  "insight_id": "0e8776c2-748e-41a2-9323-b8e7827e6894",
   "prompt": "Analysis of META performance",
-  "created_at": "2026-04-05T09:41:52.713812+00:00",
+  "created_at": "2026-04-05T13:57:49.705077+00:00",
   "quant_summary": {
     "title": "META Analysis",
-    "summary_text": "Meta shows strong correlation with social media trends.",
+    "summary_text": "Analysis based on portfolio value of $0.00. Regarding requested symbols META: These are NOT currently in your portfolio. However, your current tech exposure in AAPL, MSFT, and NVDA fulfills a similar growth profile.",
     "key_metrics": {
-      "P/E": 25.4,
-      "Volume": "12M"
+      "Tech Weight": "0.0%",
+      "Equity Pct": "0.0%",
+      "Risk Score": "Moderate-High"
     }
   },
   "nodes": [
     {
       "node_id": "root",
       "schema": {
+        "type": "portfolio_summary"
+      },
+      "data": {
+        "total_value": null,
+        "tech_weight": 0,
+        "risk_note": null
+      }
+    },
+    {
+      "node_id": "node_META",
+      "schema": {
         "type": "ticker_info"
       },
       "data": {
         "symbol": "META",
-        "price": 490.23,
-        "change": "+1.2%"
+        "in_portfolio": false,
+        "current_price": "N/A",
+        "performance": "N/A"
       }
     }
   ],
-  "edges": [],
+  "edges": [
+    {
+      "source_id": "root",
+      "target_id": "node_META",
+      "reasoning": "Exposure analysis for META"
+    }
+  ],
   "root_node_id": "root",
-  "visualizer_pseudo_prompt": "Draw a bull-eye chart centered on META's current valuation.",
+  "visualizer_pseudo_prompt": "Create a visualization showing Analysis of META performance relative to the current portfolio concentration.",
   "suggested_chart_types": [
     "annotated_line"
   ],
