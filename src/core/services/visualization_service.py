@@ -10,17 +10,31 @@ from src.core.primitives.financial_insight import InsightNode, InsightEdge, Quan
 
 from src.core.services.visualization_sink_factory import VisualizationSinkFactory
 from src.core.providers.stub_quant_llm_provider import StubQuantLLMProvider
+from src.core.providers.claude_quant_llm_provider import ClaudeQuantLLMProvider
 
 logger = logging.getLogger(__name__)
 
 def create_visualization_sink(prompt: str, portfolio_context: Dict[str, Any] | None = None) -> VisualizationSink:
     """
     Public API to create a VisualizationSink.
-    Phase 2: Uses the StubQuantLLMProvider with portfolio context.
+    Phase 2: Uses ClaudeQuantLLMProvider if API key is present, otherwise StubQuantLLMProvider.
     """
     try:
-        # Instantiate the new portfolio-aware provider
-        llm_provider = StubQuantLLMProvider(portfolio_context=portfolio_context)
+        # 1. Decide which provider to use based on API keys
+        api_key = (
+            os.getenv("ANTHROPIC_API_KEY")
+            or os.getenv("LLM_API_KEY")
+            # or "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"
+        # ← your key here
+        )
+        
+        if api_key:
+            logger.info("Using ClaudeQuantLLMProvider for insight generation.")
+            llm_provider = ClaudeQuantLLMProvider(portfolio_context=portfolio_context, api_key=api_key)
+        else:
+            logger.info("Using StubQuantLLMProvider for insight generation.")
+            llm_provider = StubQuantLLMProvider(portfolio_context=portfolio_context)
+            
         return VisualizationSinkFactory.create(prompt, llm_provider)
     except Exception as e:
         logger.error(f"VisualizationSinkFactory failed: {e}")

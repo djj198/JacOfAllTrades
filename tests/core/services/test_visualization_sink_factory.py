@@ -2,8 +2,6 @@ import unittest
 from typing import Dict, Any
 from src.core.services.visualization_sink_factory import VisualizationSinkFactory, VisualizationSinkFactoryError
 from src.core.primitives.visualization_sink import VisualizationSink
-from src.core.primitives.data_ref import DataRef
-from src.core.services.safe_lambda_readers import SafeLambdaReaderRegistry
 from tests.utils import setup_test_logging
 
 class MockLLMProvider:
@@ -13,9 +11,15 @@ class MockLLMProvider:
             "properties": {
                 "nodes": {"type": "array"},
                 "edges": {"type": "array"},
-                "summary": {"type": "object"}
+                "quant_summary": {
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string"},
+                        "summary_text": {"type": "string"}
+                    }
+                }
             },
-            "required": ["nodes", "edges", "summary"]
+            "required": ["nodes", "edges", "quant_summary"]
         }
 
     def generate_insight_data(self, prompt: str, schema: Dict[str, Any]) -> Dict[str, Any]:
@@ -28,16 +32,12 @@ class MockLLMProvider:
                 },
                 {
                     "node_id": "n2",
-                    "schema": {"type": "data_ref"},
-                    "data": {
-                        "path": "test.csv", 
-                        "reader_name": "csv_timeseries_lazy", 
-                        "format": "csv"
-                    }
+                    "schema": {"type": "generic"},
+                    "data": {"status": "direct_data"}
                 }
             ],
             "edges": [{"source_id": "n1", "target_id": "n2", "reasoning": "data link"}],
-            "summary": {"title": "Test Insight", "summary_text": "Validation works."}
+            "quant_summary": {"title": "Test Insight", "summary_text": "Validation works."}
         }
 
 class TestVisualizationSinkFactory(unittest.TestCase):
@@ -46,17 +46,14 @@ class TestVisualizationSinkFactory(unittest.TestCase):
 
     def test_factory_create(self):
         llm = MockLLMProvider()
-        sink = VisualizationSinkFactory.create("Analyze AAPL with CSV", llm) # type: ignore
+        sink = VisualizationSinkFactory.create("Analyze AAPL", llm) # type: ignore
         
         self.assertIsInstance(sink, VisualizationSink)
         self.assertEqual(len(sink.nodes), 2)
         self.assertEqual(len(sink.edges), 1)
         
-        # Verify reader attachment
         node2 = sink.nodes[1]
-        # Our reader returns {"status": "lazy_loaded", "path": "test.csv", "params": None}
-        self.assertEqual(node2.data["status"], "lazy_loaded")
-        self.assertEqual(node2.data["path"], "test.csv")
+        self.assertEqual(node2.data["status"], "direct_data")
 
     def test_factory_validation_failure(self):
         class BadLLM:

@@ -110,6 +110,7 @@ class AcpTransport(Agent):
         )
             
         return PromptResponse(
+            content=[TextContentBlock(type="text", text=output.text)],
             field_meta={"visualization_sink": sink_dict},
             stop_reason=output.stop_reason
         )

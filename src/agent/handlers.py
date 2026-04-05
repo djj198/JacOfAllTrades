@@ -28,8 +28,25 @@ class JacPromptHandler:
         sink = create_visualization_sink(prompt=input_data.prompt, portfolio_context=portfolio_data)
         
         # 2. Package output according to Protocol
+        sink_dict = sink.to_dict()
+        summary = sink_dict.get("quant_summary", {})
+        title = summary.get("title", "Insight")
+        metrics = summary.get("key_metrics", {})
+        metrics_str = "\n".join([f"- **{k}**: {v}" for k, v in metrics.items()])
+
+        full_text = (
+            f"### {title}\n\n"
+            f"{summary.get('summary_text', '')}\n\n"
+            f"**Key Portfolio Metrics:**\n"
+            f"{metrics_str}\n\n"
+            f"**Visualization Sink JSON:**\n"
+            f"```json\n"
+            f"{json.dumps(sink_dict, indent=2)}\n"
+            f"```"
+        )
+
         return PromptOutput(
-            text=f"Jac Agent analyzed: {input_data.prompt}",
-            visualization_sink=sink.to_dict(),
+            text=full_text,
+            visualization_sink=sink_dict,
             stop_reason="end_turn"
         )
