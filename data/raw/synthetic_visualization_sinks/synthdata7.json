@@ -1,0 +1,30 @@
+{
+  "insight_id": "vis_meta_deep_dive_20260405",
+  "prompt": "Deep dive on META fundamentals, recent price history impact on my position, and allocation recommendation",
+  "created_at": "2026-04-05T08:22:00Z",
+  "quant_summary": {
+    "title": "META Position Analysis",
+    "summary_text": "META shows strong fundamentals with 28% YoY revenue growth. My position is up 18.4% but price history reveals a recent 12% drawdown. Recommendation: hold with 5% trailing stop.",
+    "key_metrics": { "pe_ratio": 25.4, "revenue_growth_yoy": 28.1, "position_pnl_pct": 18.4 }
+  },
+  "nodes": [
+    {
+      "node_id": "meta_structural_ticker",
+      "schema": {
+        "ticker": "object",
+        "price_history_reference": { "start": "date", "end": "date", "timeframe": "string" },
+        "user_position": "object"
+      },
+      "data": {
+        "ticker": { "symbol": "META", "name": "Meta Platforms", "asset_class": "stock" },
+        "price_history_reference": { "start": "2026-01-01", "end": "2026-04-05", "timeframe": "1Day" },
+        "user_position": { "quantity": 85, "avg_cost_basis": 412.75, "unrealized_pnl": 6425 }
+      }
+    }
+  ],
+  "edges": [],
+  "root_node_id": "meta_structural_ticker",
+  "visualizer_pseudo_prompt": "Dual-panel chart: top panel shows 3-month price history with volume bars; bottom panel shows position cost basis line vs current price. Annotate key events.",
+  "suggested_chart_types": ["annotated_line"],
+  "rendered_payload": {}
+}

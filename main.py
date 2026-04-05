@@ -2,31 +2,35 @@ import os
 import sys
 import asyncio
 import logging
-from src.io import run_stdio_transport
+from src.transport.stdio_handler import run_stdio_transport
 
 # Ensure the log directory exists
-LOG_PATH = sys.argv[1] if len(sys.argv) > 1 else "logs/agent.log"
+DEFAULT_LOG_PATH = "/home/theodoric/DataspellProjects/JacOfAllTrades/logs/agent.log"
+LOG_PATH = os.environ.get("AGENT_LOG_PATH", DEFAULT_LOG_PATH)
 os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
 
-# Standard logging configuration
+# Configure logging to file and stderr (stdout is reserved for ACP)
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    filename=LOG_PATH,
-    filemode='a'
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stderr),
+        logging.FileHandler(LOG_PATH)
+    ]
 )
+logging.captureWarnings(True)
+
+logger = logging.getLogger("main")
 
 def main() -> None:
-    """Thin entry point for the Jac ACP Trading Agent MVP."""
-    logger = logging.getLogger("main")
-    logger.info("Starting Jac ACP Trading Agent MVP...")
-    
+    """Launch the JOAT ACP Agent."""
+    logger.info("Starting JOAT ACP Agent...")
     try:
         asyncio.run(run_stdio_transport())
     except KeyboardInterrupt:
-        logger.info("Shutting down...")
+        logger.info("Agent stopped by user")
     except Exception as e:
-        logger.error(f"Agent crashed: {e}")
+        logger.exception(f"Agent crashed: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

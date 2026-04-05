@@ -1,0 +1,30 @@
+{
+  "insight_id": "vis_portfolio_optimization_20260405",
+  "prompt": "Suggest portfolio rebalancing for META, PLTR, SPY based on current positions and risk targets",
+  "created_at": "2026-04-05T08:30:00Z",
+  "quant_summary": {
+    "title": "Optimization Recommendation",
+    "summary_text": "Current allocation is 48% META-heavy. Suggested rebalance: reduce META to 35%, increase SPY to 40%. Projected risk reduction: 14%.",
+    "key_metrics": { "current_risk_score": 0.78, "target_risk_score": 0.65, "rebalance_cost": 1240 }
+  },
+  "nodes": [
+    {
+      "node_id": "current_vs_target_allocation",
+      "schema": {
+        "current": "object[]",
+        "target": "object[]",
+        "delta": "object[]"
+      },
+      "data": {
+        "current": [{ "symbol": "META", "weight": 48.2 }, { "symbol": "PLTR", "weight": 31.7 }, { "symbol": "SPY", "weight": 20.1 }],
+        "target": [{ "symbol": "META", "weight": 35.0 }, { "symbol": "PLTR", "weight": 25.0 }, { "symbol": "SPY", "weight": 40.0 }],
+        "delta": [{ "symbol": "META", "delta_pct": -13.2 }, { "symbol": "PLTR", "delta_pct": -6.7 }, { "symbol": "SPY", "delta_pct": 19.9 }]
+      }
+    }
+  ],
+  "edges": [],
+  "root_node_id": "current_vs_target_allocation",
+  "visualizer_pseudo_prompt": "Side-by-side bar charts for current vs target allocation with delta arrows. Include risk score gauge.",
+  "suggested_chart_types": ["stacked_xy"],
+  "rendered_payload": {}
+}
