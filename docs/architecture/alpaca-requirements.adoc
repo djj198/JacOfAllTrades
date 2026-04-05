@@ -1,0 +1,81 @@
+= Alpaca MCP Server Requirements – Ticker-First Domain Model
+:version: 1.2 (Simplified)
+:date: 2026-04-04
+:project: JacHacks 2026 - JOAT ACP Agent
+:status: Requirements for MCP Server Developer
+
+== Overview
+
+The JOAT ACP agent uses a **ticker-first** design where `Ticker` is the root primitive. It owns:
+
+* Fundamentals
+* Lazy price history (via callable that pulls CSV on demand)
+* User allocation / position data
+
+The Portfolio is a thin immutable aggregator of Tickers + account info.
+
+These requirements are grouped into three categories. For each data type, the MCP server developer should answer the questions below to determine feasibility, gaps, and required extensions.
+
+All tools must use the official MCP JSON-RPC protocol, respect injected credentials from the ACP `session/new` handshake, return data in formats friendly to immutable Python dataclasses, and support lazy / low-memory usage.
+
+=== Category 1: Ticker Identity & Fundamentals
+
+Data needed to construct the immutable `Ticker` root and its `Fundamentals` object.
+
+* Ticker metadata (symbol, name, exchange, asset_class)
+* Fundamentals (P/E ratio, market_cap, dividend_yield, 52-week high/low)
+
+**Questions for MCP Server Developer:**
+* Can `ticker/get_metadata` (or equivalent) return symbol, name, exchange, and asset_class (stock/etf/option/crypto)?
+* Does a fundamentals tool exist (or can one be added) that returns pe_ratio, market_cap, dividend_yield, and 52-week high/low?
+* Is batch lookup supported (multiple symbols in one call)?
+* What is the cache duration or freshness guarantee for fundamentals data?
+* Are there gaps for options or crypto?
+
+=== Category 2: Lazy Price History & Real-Time Data
+
+Data required for the `price_history` lazy callable (lambda) that pulls CSV at runtime, plus real-time enrichment.
+
+* Historical OHLCV bars (as raw CSV preferred: timestamp,open,high,low,close,volume)
+* Real-time / latest quote (last_price, bid, ask, volume, timestamp)
+
+**Questions for MCP Server Developer:**
+* Is there (or can we add) a tool `ticker/get_price_history_csv` that accepts symbol, start/end dates, timeframe, and returns **raw CSV**?
+* What timeframes are supported (1Min, 5Min, 1Day, etc.) and what is the maximum number of bars per call?
+* Can the tool support streaming or chunked responses for long histories?
+* Does a `ticker/get_latest_quote` tool exist for real-time data?
+* How should the agent handle rate limits or partial results when the lazy lambda is invoked?
+* What parsing considerations exist for timestamps and decimal values?
+
+=== Category 3: User Allocation, Positions & Account
+
+Data needed to populate `UserAllocation` inside each Ticker and the overall immutable `Portfolio`.
+
+* Account-level info (cash, buying_power, margin_used, status, account_id)
+* Positions / holdings (symbol, quantity, avg_cost_basis, unrealized_pnl)
+
+**Questions for MCP Server Developer:**
+* Does `portfolio/get_account` (or `get_account_info`) return cash, buying_power, margin, and status?
+* Does `portfolio/get_positions` (or `get_all_positions`) return a list with symbol, quantity, avg_cost_basis, and unrealized_pnl?
+* Is bulk retrieval of all positions supported in one call?
+* Is there a convenient `portfolio/get_full_snapshot` that combines account + positions?
+* How are multi-account scenarios or pending orders handled?
+* Are historical position snapshots available, or only current open positions?
+
+== Non-Functional Questions (Apply to All Categories)
+
+* Can all read tools be called concurrently without blocking?
+* What standardized error format is used (code, message, retryable)?
+* How is rate-limit status communicated so the agent can implement back-off?
+* Are tools idempotent for reads?
+* Does the server advertise its capabilities/version so the JOAT agent can validate at session start?
+* What is the expected latency for typical calls (e.g., 1-year daily history)?
+
+== Next Steps & Recommendations
+
+* Prioritize Category 2 (CSV history tool) — it is the cornerstone of the low-memory lazy design.
+* For any missing tools, consider extending the official Alpaca MCP server or adding custom wrappers.
+* Document answers to these questions in `docs/traceability/architectural-decision-record.md` and update `data/raw/mcp_tool_signatures.json` with examples.
+* Once answered, we can refine the `TickerService` implementation in `src/core/services/` and map cleanly to Jac walkers.
+
+This simplified structure keeps the requirements focused, actionable, and directly aligned with the ticker-first domain model while respecting the project's strict separation of concerns and immutable design rules.
