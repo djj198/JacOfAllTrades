@@ -261,3 +261,30 @@ graph TD
 * **LLM Calls**: Replace Python protocol methods with `by llm()` calls inside Jac walkers.
 * **Graph Building**: Replace Python dictionary mapping with native Jac node/edge creation.
 * **Schema Management**: Use Jac's native type system and LLM integration for dynamic schema handling.
+
+== Phase 4: Pure Functional Orchestration - The Vibe Pipeline Service
+
+Phase 4 consolidates the 3-step orchestration logic into a single, pure-functional pipeline service. This "Vibe Pipeline" serves as the single source of truth for prompt processing and provides the final structural template for the future Jac walker migration.
+
+=== The Vibe Pipeline Service
+The `vibe_pipeline` function in `src/core/services/vibe_pipeline.py` orchestrates the entire flow:
+1. **Portfolio Context**: Calls `get_portfolio_context` to retrieve the current state.
+2. **Insight Engine**: Calls `create_financial_insight` to generate the core insight graph.
+3. **Visualization Sink**: Calls `create_visualization_sink` to derive the final visualization payload.
+
+=== Key Architectural Changes
+* **Centralized Orchestration**: Logic previously residing in `JacPromptHandler` is now encapsulated in a pure function, making the handler a thin delegation layer.
+* **Safe Attribute Access**: Implements `getattr(obj, "key", default) ` patterns for all ACP/MCP object interactions, ensuring resilience against missing optional fields.
+* **Jac-Migratable Path**: The entire `vibe_pipeline` function is marked as a future `vibe_pipeline_walker`, with each internal step mapped to specific sub-walkers.
+* **Type Safety & Immutability**: Maintains strict adherence to `@dataclass(frozen=True)` and comprehensive type hinting across the entire pipeline.
+
+=== Pipeline Flow
+
+[mermaid, target="vibe-pipeline-orchestration", format="png"]
+----
+graph TD
+    A[PromptInput] -->|vibe_pipeline| B(get_portfolio_context)
+    B -->|PortfolioContext| C(create_financial_insight)
+    C -->|FinancialInsight| D(create_visualization_sink)
+    D -->|VisualizationSink| E[PromptOutput]
+----
