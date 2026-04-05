@@ -17,3 +17,19 @@ class PromptOutput:
 class PromptHandler(Protocol):
     def handle_prompt(self, input_data: PromptInput) -> PromptOutput:
         ...
+
+class QuantLLMProtocol(Protocol):
+    """
+    Protocol for LLM reasoning related to quantitative insights.
+    """
+    def generate_schema(self, prompt: str) -> Dict[str, Any]:
+        """
+        Generates a JSON Schema based on the prompt's data requirements.
+        """
+        ...
+
+    def generate_insight_data(self, prompt: str, schema: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generates data matching the schema.
+        """
+        ...

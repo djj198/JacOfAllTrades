@@ -1,0 +1,234 @@
+
+--- Initialize Response ---
+{'id': 1,
+ 'jsonrpc': '2.0',
+ 'result': {'agentCapabilities': {},
+            'agentInfo': {'name': 'JacHacks-JOAT-Agent', 'version': '1.0.0'},
+            'protocolVersion': 1}}
+
+--- Session Response ---
+{'error': {'code': -32602,
+           'data': {'errors': [{'input': {},
+                                'loc': ['mcpServers'],
+                                'msg': 'Input should be a valid list',
+                                'type': 'list_type',
+                                'url': 'https://errors.pydantic.dev/2.12/v/list_type'}]},
+           'message': 'Invalid params'},
+ 'id': 2,
+ 'jsonrpc': '2.0'}
+
+--- Final Prompt Response ---
+{'error': {'code': -32602,
+           'data': {'errors': [{'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                'loc': ['prompt',
+                                        0,
+                                        'TextContentBlock',
+                                        'text'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'},
+                               {'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                'loc': ['prompt',
+                                        0,
+                                        'TextContentBlock',
+                                        'type'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'},
+                               {'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                'loc': ['prompt',
+                                        0,
+                                        'ImageContentBlock',
+                                        'data'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'},
+                               {'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                'loc': ['prompt',
+                                        0,
+                                        'ImageContentBlock',
+                                        'mimeType'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'},
+                               {'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                'loc': ['prompt',
+                                        0,
+                                        'ImageContentBlock',
+                                        'type'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'},
+                               {'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                'loc': ['prompt',
+                                        0,
+                                        'AudioContentBlock',
+                                        'data'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'},
+                               {'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                'loc': ['prompt',
+                                        0,
+                                        'AudioContentBlock',
+                                        'mimeType'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'},
+                               {'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                F
+======================================================================
+FAIL: test_agent_stdio_communication (__main__.TestStdioIntegration.test_agent_stdio_communication)
+Start the agent as a subprocess, send an initialize and prompt request,
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/theodoric/DataspellProjects/JacOfAllTrades/tests/test_integration_stdio.py", line 125, in test_agent_stdio_communication
+    self.assertIsNotNone(visualization_sink, "VisualizationSink missing in response meta")
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : VisualizationSink missing in response meta
+
+----------------------------------------------------------------------
+Ran 1 test in 0.219s
+
+FAILED (failures=1)
+'loc': ['prompt',
+                                        0,
+                                        'AudioContentBlock',
+                                        'type'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'},
+                               {'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                'loc': ['prompt',
+                                        0,
+                                        'ResourceContentBlock',
+                                        'name'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'},
+                               {'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                'loc': ['prompt',
+                                        0,
+                                        'ResourceContentBlock',
+                                        'uri'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'},
+                               {'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                'loc': ['prompt',
+                                        0,
+                                        'ResourceContentBlock',
+                                        'type'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'},
+                               {'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                'loc': ['prompt',
+                                        0,
+                                        'EmbeddedResourceContentBlock',
+                                        'resource'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'},
+                               {'input': {'content': [{'text': 'Analyze META '
+                                                               'stock '
+                                                               'performance '
+                                                               'and '
+                                                               'correlation '
+                                                               'with S&P 500',
+                                                       'type': 'text'}],
+                                          'role': 'user'},
+                                'loc': ['prompt',
+                                        0,
+                                        'EmbeddedResourceContentBlock',
+                                        'type'],
+                                'msg': 'Field required',
+                                'type': 'missing',
+                                'url': 'https://errors.pydantic.dev/2.12/v/missing'}]},
+           'message': 'Invalid params'},
+ 'id': 3,
+ 'jsonrpc': '2.0'}
