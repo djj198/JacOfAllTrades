@@ -5,16 +5,19 @@ import os
 import time
 from pprint import pprint
 import unittest
+from tests.utils import setup_test_logging
 
 class TestStdioIntegration(unittest.TestCase):
     def setUp(self):
         # Ensure we are in the project root
         self.project_root = "/home/theodoric/DataspellProjects/JacOfAllTrades"
         self.main_path = os.path.join(self.project_root, "main.py")
+        self.log_path = setup_test_logging(self.id())
         self.env = os.environ.copy()
         self.env["PYTHONPATH"] = self.project_root
         # Enable debug logging for transport to see more info in agent.log
         self.env["DEBUG_TRANSPORT"] = "true"
+        self.env["AGENT_LOG_PATH"] = self.log_path
 
     def test_agent_stdio_communication(self):
         """

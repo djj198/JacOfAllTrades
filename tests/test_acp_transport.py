@@ -5,9 +5,11 @@ from src.transport.acp_transport import AcpTransport
 from src.transport.session_manager import SessionManager
 from src.transport.acp_bridge import AcpBridge
 from src.interfaces.protocols import PromptInput, PromptOutput
+from tests.utils import setup_test_logging
 
 class TestAcpTransport(unittest.TestCase):
     def setUp(self) -> None:
+        setup_test_logging(self.id())
         self.bridge = MagicMock(spec=AcpBridge)
         self.bridge.process_prompt = AsyncMock()
         self.session_manager = SessionManager()

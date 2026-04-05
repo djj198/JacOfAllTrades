@@ -6,15 +6,17 @@ import time
 import unittest
 from pprint import pprint
 import logging
+from tests.utils import setup_test_logging
 
 class TestAgentStability(unittest.TestCase):
     def setUp(self):
         self.project_root = "/home/theodoric/DataspellProjects/JacOfAllTrades"
         self.main_path = os.path.join(self.project_root, "main.py")
-        self.log_path = "/home/theodoric/DataspellProjects/JacOfAllTrades/logs/agent.log"
+        self.log_path = setup_test_logging(self.id())
         self.env = os.environ.copy()
         self.env["PYTHONPATH"] = self.project_root
         self.env["DEBUG_TRANSPORT"] = "true"
+        self.env["AGENT_LOG_PATH"] = self.log_path
         
         # Prompts to use for testing
         self.test_prompts = [

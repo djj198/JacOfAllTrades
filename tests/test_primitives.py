@@ -5,8 +5,11 @@ from src.core.primitives.financial_insight import InsightNode, InsightEdge, Quan
 from src.core.primitives.visualization_sink import VisualizationSink
 from src.core.primitives.ticker import Ticker
 from src.core.primitives.portfolio import Portfolio
+from tests.utils import setup_test_logging
 
 class TestPrimitives(unittest.TestCase):
+    def setUp(self):
+        setup_test_logging(self.id())
     def test_insight_node_serialization(self) -> None:
         node = InsightNode(
             node_id="test-node",

@@ -6,15 +6,17 @@ import time
 import unittest
 from pathlib import Path
 from typing import Any, Dict
+from tests.utils import setup_test_logging
 
 class TestAgentACPStability(unittest.TestCase):
     def setUp(self):
         self.project_root = "/home/theodoric/DataspellProjects/JacOfAllTrades"
         self.main_path = os.path.join(self.project_root, "main.py")
-        self.log_path = "/home/theodoric/DataspellProjects/JacOfAllTrades/logs/agent.log"
+        self.log_path = setup_test_logging(self.id())
         self.env = os.environ.copy()
         self.env["PYTHONPATH"] = self.project_root
         self.env["DEBUG_TRANSPORT"] = "true"
+        self.env["AGENT_LOG_PATH"] = self.log_path
         
         # New prompts for rotation
         self.test_prompts = [

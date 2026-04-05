@@ -4,8 +4,11 @@ import os
 from pathlib import Path
 from src.core.services.visualization_service import create_visualization_sink
 from src.core.primitives.visualization_sink import VisualizationSink
+from tests.utils import setup_test_logging
 
 class TestVisualizationService(unittest.TestCase):
+    def setUp(self):
+        setup_test_logging(self.id())
     def test_create_meta_sink(self) -> None:
         sink = create_visualization_sink("Analysis of META performance")
         self.assertEqual(sink.prompt, "Analysis of META performance")
