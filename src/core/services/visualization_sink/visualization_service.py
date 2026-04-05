@@ -4,9 +4,10 @@ import os
 import logging
 from pathlib import Path
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from src.core.primitives.visualization_sink import VisualizationSink
-from src.core.primitives.financial_insight import InsightNode, InsightEdge, QuantSummary
+from src.core.primitives.financial_insight import FinancialInsight, InsightNode, InsightEdge, QuantSummary
+from src.core.services.visualization_sink.graph_utils import attach_lazy_readers, derive_visualizer_prompt
 
 from src.core.services.visualization_sink_factory import VisualizationSinkFactory, VisualizationSinkFactoryError
 from src.interfaces.protocols import QuantLLMProtocol
@@ -119,11 +120,35 @@ def _create_synthetic_fallback(prompt: str) -> VisualizationSink:
         suggested_chart_types=suggested_chart_types
     )
 
-def create_visualization_sink(prompt: str) -> VisualizationSink:
+def create_visualization_sink(prompt: str, financial_insight: Optional[FinancialInsight] = None) -> VisualizationSink:
     """
     Public API to create a VisualizationSink.
-    Phase 2: Attempts to use the VisualizationSinkFactory first, falls back to synthetic data.
+    If financial_insight is provided, it derives the sink from it.
+    Otherwise, it falls back to the existing synthetic/factory path.
     """
+    if financial_insight:
+        logger.info(f"Creating visualization sink from provided FinancialInsight (ID: {financial_insight.insight_id})")
+
+        # Derive sink from financial_insight
+        enriched_nodes = attach_lazy_readers(financial_insight.nodes)
+        
+        # Use provided visualizer prompt/chart types if available, otherwise derive
+        visualizer_prompt = financial_insight.visualizer_pseudo_prompt or derive_visualizer_prompt(financial_insight)
+        suggested_chart_types = financial_insight.suggested_chart_types or ["annotated_line", "heatmap"]
+
+        return VisualizationSink(
+            insight_id=financial_insight.insight_id,
+            prompt=financial_insight.prompt,
+            created_at=datetime.now(timezone.utc).isoformat(),
+            quant_summary=financial_insight.quant_summary,
+            nodes=enriched_nodes,
+            edges=financial_insight.edges,
+            root_node_id=financial_insight.root_node_id,
+            visualizer_pseudo_prompt=visualizer_prompt,
+            suggested_chart_types=suggested_chart_types
+        )
+
+    # Legacy path (Phase 2): Attempts to use the VisualizationSinkFactory first, falls back to synthetic data.
     # TODO (Jac): BEGIN - Replace this block with direct Jac walker call
     # walker build_visualization_sink { ... }
     try:

@@ -175,6 +175,35 @@ All edges are **typed** and carry semantic labels. Walkers traverse them functio
 * *Walker Metadata*: Each walker declares input/output types and guarantees purity (no side effects except controlled external protocol calls).
 * *Session Labels*: Transient labels on `JOAT ACP agent` for ACP session state (e.g., `session_id`, `mcp_config_passed_by_terminal`).
 
+=== Phase 3: Slim New Layered InsightEngine + Exact Vibe Pipeline
+
+The system now implements a 3-step functional pipeline for processing all user prompts:
+
+1. **`get_portfolio_context(session_id)`**: Returns a `PortfolioContext` (frozen dataclass).
+2. **`create_financial_insight(prompt, context)`**: Returns a `FinancialInsight` (graph structure).
+3. **`create_visualization_sink(prompt, insight)`**: Returns the final `VisualizationSink`.
+
+This pipeline is designed for direct migration to Jac walkers in Phase 4.
+
+[plantuml, target="vibe-pipeline-diag", format="png"]
+----
+@startuml
+skinparam componentStyle rectangle
+artifact "PromptInput" as input
+package "Vibe Pipeline (Pure Sync)" {
+  component "PortfolioContext\n(Component #1)" as C1
+  component "FinancialInsight\n(Component #2)" as C2
+  component "VisualizationSink\n(Component #3)" as C3
+}
+artifact "PromptOutput" as output
+
+input -> C1 : 1. Context Snapshot
+C1 -> C2 : 2. Generate Insight
+C2 -> C3 : 3. Derive Visualization
+C3 -> output : 4. Response Meta
+@enduml
+----
+
 === Visual Graph (PlantUML)
 
 The following diagram uses PlantUML syntax (component + deployment style for clarity, with explicit flows). It renders the same structure as the original Mermaid diagram but with PlantUML's powerful layout engine.

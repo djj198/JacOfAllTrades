@@ -3,7 +3,7 @@ from typing import Dict, Any
 from src.core.services.visualization_sink_factory import VisualizationSinkFactory, VisualizationSinkFactoryError
 from src.core.primitives.visualization_sink import VisualizationSink
 from src.core.primitives.data_ref import DataRef
-from src.core.services.safe_lambda_readers import SafeLambdaReaderRegistry
+from src.core.services.shared.readers.safe_lambda_readers import SafeLambdaReaderRegistry
 from tests.utils import setup_test_logging
 
 class MockLLMProvider:

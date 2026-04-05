@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field, asdict
 from typing import List, Dict, Any, Optional
-from src.core.primitives.financial_insight import InsightNode, InsightEdge, QuantSummary
+from src.core.primitives.financial_insight.financial_insight import InsightNode, InsightEdge, QuantSummary
 
 @dataclass(frozen=True)
 class VisualizationSink:

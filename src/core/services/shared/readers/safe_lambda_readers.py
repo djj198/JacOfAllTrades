@@ -32,4 +32,23 @@ def read_csv_timeseries_lazy(path: str, params: Optional[Dict[str, Any]] = None)
 
 # Pre-register the MVP reader
 SafeLambdaReaderRegistry.register("csv_timeseries_lazy", read_csv_timeseries_lazy)
+
+def read_price_history_lazy(path: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    """
+    Financial Reader: Lazy loading of historical price data.
+    """
+    logger.info(f"Lazy loading price history from {path} with params {params}")
+    return {"status": "lazy_loaded", "type": "price_history", "path": path, "params": params}
+
+def read_correlation_matrix_lazy(path: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    """
+    Financial Reader: Lazy loading of correlation matrix data.
+    """
+    logger.info(f"Lazy loading correlation matrix from {path} with params {params}")
+    return {"status": "lazy_loaded", "type": "correlation_matrix", "path": path, "params": params}
+
+# Pre-register the new financial readers
+SafeLambdaReaderRegistry.register("price_history_lazy", read_price_history_lazy)
+SafeLambdaReaderRegistry.register("correlation_matrix_lazy", read_correlation_matrix_lazy)
+
 # TODO (Jac): END - Jac replacement block

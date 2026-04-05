@@ -157,7 +157,106 @@ fallback -> sink
 @enduml
 ----
 
-=== Jac TODO Migration Plan
+== Phase 3: Slim New Layered InsightEngine + Exact Vibe Pipeline
+
+Phase 3 introduces a more granular, three-component pipeline for processing prompts, providing a clear path for future Jac walker integration. This "Vibe Pipeline" ensures that portfolio context, financial insights, and visualization sinks are handled as discrete, pure-functional steps.
+
+=== The Vibe Pipeline
+1. **Portfolio Context**: Retrieves a thin, immutable snapshot of the user's current portfolio (e.g., holdings, weights, fundamentals).
+2. **Insight Engine**: Generates a `FinancialInsight` primitive, which contains a graph of `InsightNode` and `InsightEdge` objects, along with a `QuantSummary`.
+3. **Visualization Sink Creation**: Derives a `VisualizationSink` from the `FinancialInsight`, enriching it with visualizer-specific metadata (e.g., pseudo-prompts, suggested chart types).
+
+=== Component Diagram
+
+[plantuml, target="phase3-vibe-pipeline", format="png"]
+----
+@startuml
+skinparam handwritten false
+skinparam packageStyle rect
+skinparam defaultTextAlignment center
+
+node "PromptInput" as input
+package "Vibe Pipeline" {
+  node "PortfolioContext" as context
+  node "FinancialInsightService" as insight_service
+  node "VisualizationService" as vis_service
+}
+node "PromptOutput" as output
+
+input -> context : 1. get_portfolio_context()
+context -> insight_service : 2. create_financial_insight(context)
+insight_service -> vis_service : 3. create_visualization_sink(insight)
+vis_service -> output : 4. Package Response
+@enduml
+----
+
+=== Key Improvements
+* **Modularity**: Each step in the pipeline is a discrete component with a well-defined interface, making it easier to test and replace.
+* **Jac-Migration-Ready**: The use of `# TODO (Jac)` blocks and pure-functional logic ensures that each component can be independently migrated to a Jac walker in Phase 4.
+* **Graph-Native Reasoning**: The `FinancialInsight` primitive explicitly models insights as a graph, aligning with the project's long-term goal of deep graph-native portfolio management.
+* **Lazy Data Loading**: New financial lazy readers (`read_price_history_lazy`, `read_correlation_matrix_lazy`) enable the engine to handle large datasets efficiently.
+
+== Phase 3 Refactor: Pure Functional Vibe Pipeline - Folder-Per-Artifact Structure
+
+To further enhance modularity and prepare for Phase 4 Jac walker migration, the core layer has been refactored into a strict folder-per-artifact structure. This transformation ensures that the Vibe Pipeline is a pure functional data pipeline: `immutable_input -> pure_function -> immutable_output_artifact`.
+
+=== Folder-Per-Artifact Structure
+
+The new structure isolates primitives and services for each core domain:
+
+[source,bash]
+----
+src/core/
+├── primitives/
+│   ├── portfolio/
+│   │   ├── __init__.py
+│   │   ├── portfolio_context.py
+│   │   └── portfolio.py
+│   ├── financial_insight/
+│   │   ├── __init__.py
+│   │   └── financial_insight.py
+│   └── visualization_sink/
+│       ├── __init__.py
+│       └── visualization_sink.py
+├── services/
+│   ├── portfolio/
+│   │   ├── __init__.py
+│   │   └── portfolio_service.py
+│   ├── financial_insight/
+│   │   ├── __init__.py
+│   │   └── financial_insight_service.py
+│   ├── visualization_sink/
+│   │   ├── __init__.py
+│   │   ├── visualization_service.py
+│   │   └── graph_utils.py
+│   └── shared/
+│       └── readers/
+│           └── safe_lambda_readers.py
+└── __init__.py
+----
+
+=== Pure Transformation Sequence
+
+Each step in the Vibe Pipeline is now a discrete, immutable transformation:
+
+[mermaid, target="vibe-pipeline-transformation", format="png"]
+----
+graph TD
+    A[PromptInput] -->|get_portfolio_context| B(PortfolioContext)
+    B -->|create_financial_insight| C(FinancialInsight)
+    C -->|create_visualization_sink| D(VisualizationSink)
+    D -->|Package| E[PromptOutput]
+----
+
+=== Benefits
+* **Maximum Decoupling**: Each service only imports its own primitives and the single upstream artifact it needs.
+* **Testability**: Artifacts can be tested in isolation with minimal dependencies.
+* **Jac Readiness**: The modular layout directly maps to future Jac walker boundaries.
+* **Backwards Compatibility**: Re-exports in `__init__.py` files ensure existing public APIs (like `create_visualization_sink(prompt)`) remain unchanged.
+
+=== Updated Jac TODO Migration Plan
+* **Modular Walkers**: Each subfolder in `src/core/services/` will eventually be replaced by a dedicated Jac walker or a set of related walkers.
+* **Artifact Nodes**: Primitives will map directly to Jac node definitions, with `to_dict` and `from_dict` methods facilitating seamless interaction with Python-based transport layers.
 * **Registry Lookup**: Replace `SafeLambdaReaderRegistry` with Jac node/edge properties or walker logic.
 * **LLM Calls**: Replace Python protocol methods with `by llm()` calls inside Jac walkers.
 * **Graph Building**: Replace Python dictionary mapping with native Jac node/edge creation.

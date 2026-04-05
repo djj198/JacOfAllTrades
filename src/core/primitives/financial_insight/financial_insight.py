@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field, asdict
 from typing import Dict, Any, List, Optional, Union
 from src.core.primitives.ticker import Ticker
-from src.core.primitives.portfolio import Portfolio
+from src.core.primitives.portfolio.portfolio import Portfolio
 from src.core.primitives.data_ref import DataRef
 
 @dataclass(frozen=True)
@@ -58,7 +58,47 @@ class QuantSummary:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Any) -> "QuantSummary":
+    def from_dict(cls, data: Dict[str, Any]) -> "QuantSummary":
         if isinstance(data, str):
             return cls(title="Quant Summary", summary_text=data)
-        return cls(**data)
+        
+        # Extract only known fields to be robust to extra fields
+        known_fields = {f.name for f in cls.__dataclass_fields__.values()}
+        filtered_data = {k: v for k, v in data.items() if k in known_fields}
+        return cls(**filtered_data)
+
+@dataclass(frozen=True)
+class FinancialInsight:
+    insight_id: str
+    prompt: str
+    quant_summary: QuantSummary
+    nodes: tuple[InsightNode, ...] = field(default_factory=tuple)
+    edges: tuple[InsightEdge, ...] = field(default_factory=tuple)
+    root_node_id: Optional[str] = None
+    visualizer_pseudo_prompt: Optional[str] = None
+    suggested_chart_types: Optional[List[str]] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d['quant_summary'] = self.quant_summary.to_dict()
+        d['nodes'] = [node.to_dict() for node in self.nodes]
+        d['edges'] = [edge.to_dict() for edge in self.edges]
+        return d
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "FinancialInsight":
+        data = data.copy()
+        quant_summary = QuantSummary.from_dict(data.pop("quant_summary", ""))
+        nodes = tuple(InsightNode.from_dict(n) for n in data.pop("nodes", []))
+        edges = tuple(InsightEdge.from_dict(e) for e in data.pop("edges", []))
+
+        # Extract only known fields to be robust to extra fields
+        known_fields = {f.name for f in cls.__dataclass_fields__.values()}
+        filtered_data = {k: v for k, v in data.items() if k in known_fields}
+        
+        return cls(
+            quant_summary=quant_summary,
+            nodes=nodes,
+            edges=edges,
+            **filtered_data
+        )

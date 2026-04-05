@@ -8,7 +8,7 @@ from src.interfaces.protocols import QuantLLMProtocol
 from src.core.primitives.visualization_sink import VisualizationSink
 from src.core.primitives.financial_insight import InsightNode, InsightEdge, QuantSummary
 from src.core.primitives.data_ref import DataRef
-from src.core.services.safe_lambda_readers import SafeLambdaReaderRegistry
+from src.core.services.shared.readers.safe_lambda_readers import SafeLambdaReaderRegistry
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import Protocol, Any, Dict, List, Optional
 
 @dataclass(frozen=True)
@@ -8,11 +8,17 @@ class PromptInput:
     mcp_config: Any = field(default_factory=list)
     cwd: Optional[str] = None
 
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
 @dataclass(frozen=True)
 class PromptOutput:
     text: str
     visualization_sink: Optional[Dict[str, Any]] = None
     stop_reason: str = "end_turn"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
 
 class PromptHandler(Protocol):
     def handle_prompt(self, input_data: PromptInput) -> PromptOutput:
