@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "JacOfAllTrades"
+version = "0.0.1"
+description = "An agent to make financial data calls to an alpaca mcp compatible with ACP"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Derek Joslin", email = "djoslin@ocumet.com" }
+]
+license = { text = "GNU GENERAL PUBLIC LICENSE" } # Or your preferred license
+keywords = ["ai"]
+dependencies = [
+
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+    "ruff>=0.1.0",
+    "ipykernel"            # Allows using the project environment in Jupyter Notebooks
+]
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.black]
+line-length = 120
+target-version = ['py39']
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
